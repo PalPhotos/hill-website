@@ -1,5 +1,6 @@
 const routes = {
-  ITEM: "/item",
+  LABEL: "/label",
+  PICTURE: "/picture",
 };
 
 export default routes;
