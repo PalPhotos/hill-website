@@ -9,7 +9,7 @@ const ClusteringScreen = lazy(() => import("../screens/ClusteringScreen"));
 const Main = () => (
   <Suspense fallback={<Loading />}>
     <Switch>
-      <Route exact path="/hill-website" component={HomeScreen} />
+      <Route exact path="/" component={HomeScreen} />
       <Route exact path="/single" component={SinglePhotoScreen} />
       <Route exact path="/cluster" component={ClusteringScreen} />
     </Switch>
