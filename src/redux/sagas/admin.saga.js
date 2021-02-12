@@ -136,9 +136,9 @@ export function* getPictureNotLabel(action) {
 
 export function* getAllPicture(action) {
   const adminService = Container.get(AdminService);
-  const {} = action.payload;
+  const { user } = action.payload;
   try {
-    const res = yield call(adminService.getAllPicture);
+    const res = yield call(adminService.getAllPicture, { user });
 
     yield put({
       type: AdminTypes.GET_ALL_PICTURE_SUCCESS,
@@ -182,6 +182,23 @@ export function* addNewPicture(action) {
   }
 }
 
+export function* addFromDrive(action) {
+  const adminService = Container.get(AdminService);
+  const { items, user } = action.payload;
+  try {
+    const resDrive = yield call(adminService.addFromDrive, { user, items });
+    const res = yield call(adminService.getAllPicture, { user });
+
+    yield put({
+      type: AdminTypes.GET_ALL_PICTURE_SUCCESS,
+      picture: res.data.userInfo,
+    });
+  } catch (error) {
+    console.log("Add items error ", error.response);
+    yield put({ type: AdminTypes.GET_ALL_PICTURE_ERROR, error });
+  }
+}
+
 export default function* adminSaga() {
   yield all([
     takeLatest(AdminTypes.GET_LABEL_REQUEST, getLabel),
@@ -194,5 +211,6 @@ export default function* adminSaga() {
     takeLatest(AdminTypes.ADD_PICTURE_REQUEST, addNewPicture),
     takeLatest(AdminTypes.GET_PICTURE_NOT_LABEL_REQUEST, getPictureNotLabel),
     takeLatest(AdminTypes.ADD_TO_CLUSTER_REQUEST, addToCluster),
+    takeLatest(AdminTypes.ADD_PICTURE_DRIVE_REQUEST, addFromDrive),
   ]);
 }

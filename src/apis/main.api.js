@@ -66,8 +66,8 @@ class MainApi extends HttpClient {
     return this.instance.post(`${routes.PICTURE}/getlabel`, item);
   };
 
-  getAllPicture = () => {
-    return this.instance.post(`${routes.PICTURE}/getall`);
+  getAllPicture = (item) => {
+    return this.instance.post(`${routes.PICTURE}/getall`, item);
   };
 
   editLabelPicture = (item) => {
@@ -76,6 +76,14 @@ class MainApi extends HttpClient {
 
   addToCluster = (item) => {
     return this.instance.post(`${routes.PICTURE}/addclus`, item);
+  };
+
+  addFromDrive = (item) => {
+    return this.instance.post(`${routes.PICTURE}/adddrive`, item);
+  };
+
+  getUser = (item) => {
+    return this.instance.post(`${routes.USER}/login`, item);
   };
 }
 

@@ -35,9 +35,9 @@ export const editLabelPicture = (labels, url, label) => ({
   payload: { labels, url, label },
 });
 
-export const getAllPicture = () => ({
+export const getAllPicture = (user) => ({
   type: AdminTypes.GET_ALL_PICTURE_REQUEST,
-  payload: {},
+  payload: { user },
 });
 
 export const addNewPicture = (name, taken) => ({
@@ -53,4 +53,9 @@ export const setAllButPics = (val) => ({
 export const addToCluster = (values, labels) => ({
   type: AdminTypes.ADD_TO_CLUSTER_REQUEST,
   payload: { values, labels },
+});
+
+export const addFromDrive = (items, user) => ({
+  type: AdminTypes.ADD_PICTURE_DRIVE_REQUEST,
+  payload: { items, user },
 });

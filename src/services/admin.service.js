@@ -141,6 +141,16 @@ class AdminService {
       throw error;
     }
   }
+
+  async addFromDrive(type) {
+    try {
+      const publicApiService = Container.get(MainApi);
+      const response = await publicApiService.addFromDrive(type);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default AdminService;

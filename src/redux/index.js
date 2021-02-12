@@ -6,9 +6,9 @@ import storage from "redux-persist/lib/storage";
 
 // Redux Persist
 const persistConfig = {
-  key: "CarryCare",
+  key: "hill",
   storage: storage,
-  whitelist: [], // which reducer want to store
+  whitelist: ["user"], // which reducer want to store
 };
 const finalReducers = persistReducer(persistConfig, reducers);
 
