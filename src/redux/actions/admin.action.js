@@ -1,18 +1,18 @@
 import { AdminTypes } from "../types";
 
-export const getLabel = () => ({
+export const getLabel = (user) => ({
   type: AdminTypes.GET_LABEL_REQUEST,
-  payload: {},
+  payload: { user },
 });
 
-export const addNewLabel = (name) => ({
+export const addNewLabel = (name, user) => ({
   type: AdminTypes.ADD_LABEL_REQUEST,
-  payload: { name },
+  payload: { name, user },
 });
 
-export const addNewLabelPic = (name, url) => ({
+export const addNewLabelPic = (name, url, user) => ({
   type: AdminTypes.ADD_LABEL_PIC_REQUEST,
-  payload: { name, url },
+  payload: { name, url, user },
 });
 
 export const getOnePicture = (url) => ({
@@ -20,19 +20,19 @@ export const getOnePicture = (url) => ({
   payload: { url },
 });
 
-export const getLabelPicture = (labels) => ({
+export const getLabelPicture = (labels, user) => ({
   type: AdminTypes.GET_PICTURE_LABEL_REQUEST,
-  payload: { labels },
+  payload: { labels, user },
 });
 
-export const getPictureNotLabel = (labels) => ({
+export const getPictureNotLabel = (labels, user) => ({
   type: AdminTypes.GET_PICTURE_NOT_LABEL_REQUEST,
-  payload: { labels },
+  payload: { labels, user },
 });
 
-export const editLabelPicture = (labels, url, label) => ({
+export const editLabelPicture = (labels, url, label, user) => ({
   type: AdminTypes.EDIT_PICTURE_LABEL_REQUEST,
-  payload: { labels, url, label },
+  payload: { labels, url, label, user },
 });
 
 export const getAllPicture = (user) => ({
@@ -50,12 +50,17 @@ export const setAllButPics = (val) => ({
   payload: val,
 });
 
-export const addToCluster = (values, labels) => ({
+export const addToCluster = (values, labels, user) => ({
   type: AdminTypes.ADD_TO_CLUSTER_REQUEST,
-  payload: { values, labels },
+  payload: { values, labels, user },
 });
 
 export const addFromDrive = (items, user) => ({
   type: AdminTypes.ADD_PICTURE_DRIVE_REQUEST,
   payload: { items, user },
+});
+
+export const clearPics = () => ({
+  type: AdminTypes.CLEAR_PICS,
+  payload: {},
 });

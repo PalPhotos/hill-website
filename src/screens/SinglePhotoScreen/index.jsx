@@ -6,7 +6,7 @@ import { ReactPictureAnnotation } from "react-picture-annotation";
 import Autosuggest from "react-autosuggest";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import { AdminActions } from "../../redux/actions";
+import { AdminActions, AnnotationActions } from "../../redux/actions";
 
 import "./styles.css";
 
@@ -24,11 +24,16 @@ const SinglePhotoScreen = (props) => {
   ]);
   const [suggestions, setsuggestions] = useState([]);
   const [value, setValue] = useState("");
+  const [annotations, setAnnotations] = useState([]);
 
   useEffect(() => {
-    props.getLabel();
+    props.getLabel(props.user._id);
     props.getOnePicture(url);
   }, []);
+
+  useEffect(() => {
+    setAnnotations(props.annotation.annotations);
+  }, [props.annotation.annotations.length]);
 
   useEffect(() => {
     if (!isAnnotation) {
@@ -123,7 +128,7 @@ const SinglePhotoScreen = (props) => {
     if (currentStart[0] !== null && currentStart[1] !== null) {
       const canvas = canvasOverlayRef.current;
       const ctx = canvas.getContext("2d");
-     
+
       ctx.beginPath();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.stroke();
@@ -173,7 +178,10 @@ const SinglePhotoScreen = (props) => {
   };
 
   const onSelect = (selectedId) => console.log(selectedId);
-  const onChange = (data) => console.log(data);
+  const onChange = (data) => {
+    setAnnotations(data);
+    console.log("daat", data);
+  };
   const buttonStuff = () => {
     return (
       <div>
@@ -197,28 +205,6 @@ const SinglePhotoScreen = (props) => {
     );
   };
 
-  // if (isAnnotation) {
-  //   return (
-  //     <div style={{ padding: "5%" }}>
-  //       {buttonStuff()}
-  //       <ReactPictureAnnotation
-  //         image="https://firebasestorage.googleapis.com/v0/b/glass-app-67aa6.appspot.com/o/20210123_130555.jpg?alt=media&token=0406fb48-10a9-4b28-b6b8-1f5a0166d204"
-  //         onSelect={onSelect}
-  //         onChange={onChange}
-  //         width={800}
-  //         height={600}
-  //       />
-  //     </div>
-  //   );
-  // } else {
-  //   return (
-  //     <div style={{ padding: "5%" }}>
-  //       {buttonStuff()}
-
-  //     </div>
-  //   );
-  // }
-
   const onSuggestionsClearRequested = () => {
     setsuggestions([]);
   };
@@ -226,10 +212,7 @@ const SinglePhotoScreen = (props) => {
   const getSuggestionValue = (suggestion) => suggestion.name;
   const renderSuggestion = (suggestion) => <div>{suggestion.name}</div>;
 
-  const onSuggestionSelected = (event, { suggestion }) => {
-
-    
-  };
+  const onSuggestionSelected = (event, { suggestion }) => {};
 
   const inputProps = {
     placeholder: "Type a label",
@@ -269,6 +252,7 @@ const SinglePhotoScreen = (props) => {
               onChange={onChange}
               width={600}
               height={450}
+              annotationData={annotations}
             />
           </div>
         ) : (
@@ -345,7 +329,7 @@ const SinglePhotoScreen = (props) => {
         />
         <Button
           onClick={() => {
-            props.addNewLabelPic(value, url);
+            props.addNewLabelPic(value, url, props.user._id);
             setValue("");
           }}
         >
@@ -361,13 +345,34 @@ const SinglePhotoScreen = (props) => {
               })}
           </div>
         </div>
+        {isAnnotation && (
+          <Button
+            onClick={() => {
+              annotations.map((item) => {
+                props.addNewAnnotation(props.admin.picture._id, item);
+              });
+            }}
+          >
+            Save Annotations
+          </Button>
+        )}
+        <Button
+          onClick={() => {
+            const canvas = canvasRef.current;
+            canvas.toBlob((res) => {
+              console.log("res", res);
+            });
+          }}
+        >
+          convert
+        </Button>
       </div>
     </div>
   );
 };
 
 const mapStateToProps = (state) => {
-  return { admin: state.admin };
+  return { admin: state.admin, user: state.user, annotation: state.annotation };
 };
 
 const mapDispatchToProps = (dispatch) =>
@@ -377,6 +382,8 @@ const mapDispatchToProps = (dispatch) =>
       getLabel: AdminActions.getLabel,
       addNewLabelPic: AdminActions.addNewLabelPic,
       getOnePicture: AdminActions.getOnePicture,
+      addNewAnnotation: AnnotationActions.addNewAnnotation,
+      getAnnotation: AnnotationActions.getAnnotation,
     },
     dispatch
   );

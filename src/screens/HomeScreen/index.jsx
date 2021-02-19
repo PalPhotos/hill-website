@@ -1,36 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { isMobile } from "react-device-detect";
-import { Modal, Button, Image, Input } from "antd";
+import { Modal, Button, Image, Input, Spin } from "antd";
 import { ReactPictureAnnotation } from "react-picture-annotation";
 import Firebase from "firebase";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { AdminActions, UserActions } from "../../redux/actions";
 import axios from "axios";
+import { SERVER_URI } from "../../constants/server";
 
 import "./styles.css";
 
 const HomeScreen = (props) => {
   const [images, setImages] = useState([]);
+  const [pageNumber, setPageNumber] = useState(1);
   const [imageMeta, setImageMeta] = useState([]);
+  const [loadingModal, setloadingModal] = useState(false);
   const [nexpage, setNext] = useState("");
-  const [drive, setDrive] = useState("");
+  const [drive, setDrive] = useState(
+    "https://drive.google.com/drive/u/0/folders/1CaqF4Q-hgxyNeIwm9_4GnGzpe6263MG-"
+  );
   let storageRef = Firebase.storage().ref();
   const history = useHistory();
-  const [options, setOptions] = useState([
-    { name: "happy" },
-    { name: "hell" },
-    { name: "hello" },
-  ]);
+  const [link, setlink] = useState("");
 
   useEffect(() => {
     // rando();
     // props.getLabel();
-    console.log("look pa", props.location);
     const urlParams = new URLSearchParams(props.location.search);
-    let user = urlParams.get("user");
-    console.log("us", user);
+    // let user = urlParams.get("user");
+    let user = "602b91f37cdcb51cacd37769";
     if (user && props.user.token.length === 0) {
       props.getUser(user);
       props.getAllPicture(user);
@@ -39,9 +39,26 @@ const HomeScreen = (props) => {
     }
   }, []);
 
+  useEffect(() => {
+    if (link.length > 0 && nexpage.length > 0 && !props.admin.loading) {
+      console.log("look cl");
+      getdata(link);
+    }
+  }, [props.admin.loading]);
+
   const getdata = async (folderId) => {
+    setloadingModal(true);
     let authToken = props.user.token;
     try {
+      let expiryTime = new Date(props.user.expiry);
+      let current = new Date();
+      if (expiryTime < current) {
+        let res = await axios.post(`${SERVER_URI}/user/refresh`, {
+          _id: props.user._id,
+        });
+        props.setUser(res.data.user);
+        authToken = res.data.user.token;
+      }
       let driveFiles = await axios.get(
         "https://www.googleapis.com/drive/v3/files",
 
@@ -49,7 +66,7 @@ const HomeScreen = (props) => {
           params: {
             corpora: "user",
             fields:
-              "files(id,name,size,mimeType,parents,webViewLink,trashed),nextPageToken",
+              "files(id,name,webViewLink,imageMediaMetadata),nextPageToken",
             q: `'${folderId}' in parents and trashed = false and mimeType = \'image/jpeg\'`,
             pageSize: 100,
             pageToken: nexpage,
@@ -60,17 +77,133 @@ const HomeScreen = (props) => {
           },
         }
       );
-      console.log("look", driveFiles);
+      console.log(driveFiles.data);
+      let files = driveFiles.data.files;
+      let finalArray = [];
+      for await (let item of files) {
+        expiryTime = new Date(props.user.expiry);
+        current = new Date();
+        if (expiryTime < current) {
+          let res = await axios.post(`${SERVER_URI}/user/refresh`, {
+            _id: props.user._id,
+          });
+          props.setUser(res.data.user);
+          authToken = res.data.user.token;
+        }
+        const URL = "https://www.googleapis.com/drive/v3/files";
+
+        const blob = await fetch(`${URL}/${item.id}?alt=media`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + authToken,
+          },
+        }).then((res) => res.blob());
+
+        let storeResr = await storageRef.child(`${item.id}.jpg`).put(blob);
+        let url = await storeResr.ref.getDownloadURL();
+        let tempObj = {
+          name: item.name,
+          url: url,
+          timestamp: item.imageMediaMetadata.time,
+          width: item.imageMediaMetadata.width,
+          height: item.imageMediaMetadata.height,
+        };
+        finalArray.push(tempObj);
+      }
+
+      props.addFromDrive(finalArray, props.user._id);
       if (driveFiles.data.nextPageToken) {
         setNext(driveFiles.data.nextPageToken);
       } else {
         setNext("");
+        setlink("");
+        setloadingModal(false);
       }
-      props.addFromDrive(driveFiles.data.files, props.user._id);
     } catch (error) {
       console.log("er", error);
     }
   };
+
+  const getdataPhotos = async () => {
+    let res = await axios.get(`${SERVER_URI}/test`);
+    // props.setUser(res.data.user);
+    console.log("hmm", res);
+    const tempArray = new Uint8Array(Object.values(res.data.newArray));
+    console.log("tem", tempArray);
+    var metadata = {
+      contentType: "image/jpeg",
+    };
+    let storeResr = await storageRef.child(`test.jpg`).put(tempArray, metadata);
+    console.log("hhm", storeResr);
+    let url = await storeResr.ref.getDownloadURL();
+  };
+
+  // const getdataPhotos = async () => {
+  //   // setloadingModal(true);
+  //   let authToken = props.user.token;
+  //   try {
+  //     let expiryTime = new Date(props.user.expiry);
+  //     let current = new Date();
+  //     if (expiryTime < current) {
+  //       let res = await axios.post(`${SERVER_URI}/user/refresh`, {
+  //         _id: props.user._id,
+  //       });
+  //       props.setUser(res.data.user);
+  //       authToken = res.data.user.token;
+  //     }
+  //     let driveFiles = await axios.get(
+  //       "https://photoslibrary.googleapis.com/v1/mediaItems",
+
+  //       {
+  //         params: {
+  //           pageSize: 1,
+  //           pageToken: nexpage,
+  //         },
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: "Bearer " + authToken,
+  //         },
+  //       }
+  //     );
+  //     console.log(driveFiles.data);
+  //     let files = driveFiles.data.mediaItems;
+  //     let finalArray = [];
+  //     for await (let item of files) {
+  //       expiryTime = new Date(props.user.expiry);
+  //       current = new Date();
+  //       if (expiryTime < current) {
+  //         let res = await axios.post(`${SERVER_URI}/user/refresh`, {
+  //           _id: props.user._id,
+  //         });
+  //         props.setUser(res.data.user);
+  //         authToken = res.data.user.token;
+  //       }
+  //       const URL = "https://photoslibrary.googleapis.com/v1/mediaItems";
+
+  //       const blob = await fetch(`${item.baseUrl}=d`).then((res) => res.blob());
+
+  //       console.log("bb", blob);
+
+  //       // let storeResr = await storageRef.child(`${item.id}.jpg`).put(blob);
+  //       // console.log("hhm", storeResr);
+  //       // let url = await storeResr.ref.getDownloadURL();
+  //       // console.log("ya", url);
+  //       // let tempObj = { name: item.name, url: url };
+  //       // finalArray.push(tempObj);
+  //     }
+
+  //     // props.addFromDrive(finalArray, props.user._id);
+  //     // if (driveFiles.data.nextPageToken) {
+  //     //   setNext(driveFiles.data.nextPageToken);
+  //     // } else {
+  //     //   setNext("");
+  //     //   setlink("");
+  //     //   setloadingModal(false);
+  //     // }
+  //   } catch (error) {
+  //     console.log("er", error);
+  //   }
+  // };
 
   const rando = async () => {
     let images = await getFireImages();
@@ -109,11 +242,24 @@ const HomeScreen = (props) => {
     }
   };
 
-  const picInfo = props.admin.allPictures;
+  const picInfo = Object.keys(props.admin.allPictures);
+  console.log("pic", picInfo);
 
   return (
     <div style={{}}>
-      <div>
+      <Modal
+        visible={loadingModal}
+        closable={false}
+        okButtonProps={{ disabled: true }}
+        cancelButtonProps={{ disabled: true }}
+      >
+        <div>
+          Please wait while we import your images. this may take a couple of
+          minutes
+          <Spin />
+        </div>
+      </Modal>
+      {/* <div>
         {props.admin.labels.map((item, index) => {
           return <Button>{item.name}</Button>;
         })}
@@ -147,7 +293,7 @@ const HomeScreen = (props) => {
             <Button
               onClick={() => {
                 const splitVal = drive.split("/");
-                console.log("split", splitVal);
+                setlink(splitVal[splitVal.length - 1]);
                 getdata(splitVal[splitVal.length - 1]);
               }}
             >
@@ -160,32 +306,59 @@ const HomeScreen = (props) => {
             )}
           </div>
         )}
-      </div>
-      <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
+        {props.user.token.length > 0 && (
+          <div>
+            <Button
+              onClick={() => {
+                getdataPhotos();
+              }}
+            >
+              Connect Google Photos
+            </Button>
+          </div>
+        )}
+      </div> */}
+      <div>
         {props.user.token.length > 0 &&
           picInfo.map((item, index) => {
             return (
-              <div
-                style={{
-                  margin: ".5%",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <img
-                  height={150}
-                  width={200}
-                  src={item.name}
-                  onClick={() => {
-                    history.push({
-                      pathname: "/single",
-                      state: { url: item.name },
-                    });
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <p style={{ margin: ".5%" }}>{item}</p>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    flexWrap: "wrap",
                   }}
-                />
-                {item.labels.map((item, index) => {
-                  return <Button>{item.name}</Button>;
-                })}
+                >
+                  {props.admin.allPictures[item] &&
+                    props.admin.allPictures[item].map((subItem, subIndex) => {
+                      return (
+                        <div
+                          style={{
+                            margin: ".5%",
+                            display: "flex",
+                            flexDirection: "row",
+                          }}
+                        >
+                          <img
+                            height={150}
+                            width={200}
+                            src={subItem.url}
+                            onClick={() => {
+                              history.push({
+                                pathname: "/single",
+                                state: { url: subItem.url },
+                              });
+                            }}
+                          />
+                          {subItem.labels.map((labelItem, index) => {
+                            return <Button>{labelItem.name}</Button>;
+                          })}
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
             );
           })}
@@ -203,12 +376,10 @@ const mapDispatchToProps = (dispatch) =>
     {
       addNewLabel: AdminActions.addNewLabel,
       getLabel: AdminActions.getLabel,
-      addNewLabelPic: AdminActions.addNewLabelPic,
-      getOnePicture: AdminActions.getOnePicture,
-      getLabelPicture: AdminActions.getLabelPicture,
       getAllPicture: AdminActions.getAllPicture,
       addNewPicture: AdminActions.addNewPicture,
       getUser: UserActions.getUser,
+      setUser: UserActions.setUser,
       addFromDrive: AdminActions.addFromDrive,
     },
     dispatch

@@ -53,6 +53,8 @@ const AdminReducer = (state = initialState, action) => {
       return { ...state, allButPics: action.payload, loading: false };
     case AdminTypes.ADD_PICTURE_DRIVE_REQUEST:
       return { ...state, loading: true, err: null };
+    case AdminTypes.CLEAR_PICS:
+      return { ...state, pictures: [], allButPics: [] };
 
     case AdminTypes.EDIT_PICTURE_LABEL_REQUEST:
       return { ...state, loading: true, err: null };

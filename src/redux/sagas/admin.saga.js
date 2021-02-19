@@ -1,14 +1,14 @@
 import { put, call, takeLatest, all } from "redux-saga/effects";
 import { Container } from "typedi";
 
-import { AdminTypes } from "../types";
+import { AdminTypes, AnnotationTypes } from "../types";
 import { AdminService } from "../../services";
 
 export function* getLabel(action) {
   const adminService = Container.get(AdminService);
-  const {} = action.payload;
+  const { user } = action.payload;
   try {
-    const res = yield call(adminService.getLabel);
+    const res = yield call(adminService.getLabel, { user });
 
     yield put({
       type: AdminTypes.GET_LABEL_SUCCESS,
@@ -22,13 +22,13 @@ export function* getLabel(action) {
 
 export function* addNewLabel(action) {
   const adminService = Container.get(AdminService);
-  const { name } = action.payload;
+  const { name, user } = action.payload;
   try {
     const resone = yield call(adminService.addNewLabel, {
       name,
     });
 
-    const res = yield call(adminService.getLabel);
+    const res = yield call(adminService.getLabel, { user });
 
     yield put({
       type: AdminTypes.GET_LABEL_SUCCESS,
@@ -42,14 +42,15 @@ export function* addNewLabel(action) {
 
 export function* addNewLabelPic(action) {
   const adminService = Container.get(AdminService);
-  const { name, url } = action.payload;
+  const { name, url, user } = action.payload;
   try {
     const resone = yield call(adminService.addNewLabelPic, {
       name,
       url,
+      user,
     });
 
-    const res = yield call(adminService.getLabel);
+    const res = yield call(adminService.getLabel, { user });
 
     yield put({
       type: AdminTypes.GET_LABEL_SUCCESS,
@@ -67,14 +68,15 @@ export function* addNewLabelPic(action) {
 
 export function* addToCluster(action) {
   const adminService = Container.get(AdminService);
-  const { values, labels } = action.payload;
+  const { values, labels, user } = action.payload;
   try {
     const resone = yield call(adminService.addToCluster, {
       values,
       label: labels[0],
+      user,
     });
 
-    const res = yield call(adminService.getLabelPicture, { labels });
+    const res = yield call(adminService.getLabelPicture, { labels, user });
 
     yield put({
       type: AdminTypes.GET_PICTURE_LABEL_SUCCESS,
@@ -96,6 +98,11 @@ export function* getOnePicture(action) {
       type: AdminTypes.GET_PICTURE_SUCCESS,
       picture: res.data.userInfo[0],
     });
+
+    yield put({
+      type: AnnotationTypes.GET_ANNOTATION_REQUEST,
+      payload: { picture: res.data.userInfo[0]._id },
+    });
   } catch (error) {
     console.log("Add items error ", error.response);
     yield put({ type: AdminTypes.GET_PICTURE_ERROR, error });
@@ -104,9 +111,9 @@ export function* getOnePicture(action) {
 
 export function* getLabelPicture(action) {
   const adminService = Container.get(AdminService);
-  const { labels } = action.payload;
+  const { labels, user } = action.payload;
   try {
-    const res = yield call(adminService.getLabelPicture, { labels });
+    const res = yield call(adminService.getLabelPicture, { labels, user });
 
     yield put({
       type: AdminTypes.GET_PICTURE_LABEL_SUCCESS,
@@ -120,9 +127,9 @@ export function* getLabelPicture(action) {
 
 export function* getPictureNotLabel(action) {
   const adminService = Container.get(AdminService);
-  const { labels } = action.payload;
+  const { labels, user } = action.payload;
   try {
-    const res = yield call(adminService.getPictureNotLabel, { labels });
+    const res = yield call(adminService.getPictureNotLabel, { labels, user });
 
     yield put({
       type: AdminTypes.GET_PICTURE_NOT_LABEL_SUCCESS,
@@ -152,10 +159,14 @@ export function* getAllPicture(action) {
 
 export function* editLabelPicture(action) {
   const adminService = Container.get(AdminService);
-  const { labels, url, label } = action.payload;
+  const { labels, url, label, user } = action.payload;
   try {
-    const resone = yield call(adminService.editLabelPicture, { url, label });
-    const res = yield call(adminService.getLabelPicture, { labels });
+    const resone = yield call(adminService.editLabelPicture, {
+      url,
+      label,
+      user,
+    });
+    const res = yield call(adminService.getLabelPicture, { labels, user });
 
     yield put({
       type: AdminTypes.GET_PICTURE_LABEL_SUCCESS,

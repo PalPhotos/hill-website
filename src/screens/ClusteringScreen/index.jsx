@@ -18,7 +18,8 @@ const ClusteringScreen = (props) => {
   const history = useHistory();
 
   useEffect(() => {
-    props.getLabel();
+    props.getLabel(props.user._id);
+    props.clearPics();
   }, []);
 
   if (props.admin.loading) {
@@ -36,7 +37,7 @@ const ClusteringScreen = (props) => {
             let tempArray = props.admin.allButPics.filter((el) => {
               return el.selected === true;
             });
-            props.addToCluster(tempArray, [curclus._id]);
+            props.addToCluster(tempArray, [curclus._id], props.user._id);
 
             setVisible(false);
           }}
@@ -83,7 +84,7 @@ const ClusteringScreen = (props) => {
                 type={curclus.name === item.name ? "primary" : null}
                 onClick={() => {
                   setCurClus(item);
-                  props.getLabelPicture([item._id]);
+                  props.getLabelPicture([item._id], props.user._id);
                 }}
               >
                 {item.name}
@@ -94,7 +95,7 @@ const ClusteringScreen = (props) => {
             onClick={() => {
               if (curclus.name) {
                 setVisible(true);
-                props.getPictureNotLabel([curclus._id]);
+                props.getPictureNotLabel([curclus._id], props.user._id);
               }
             }}
           >
@@ -128,7 +129,8 @@ const ClusteringScreen = (props) => {
                     props.editLabelPicture(
                       [curclus._id],
                       item.name,
-                      curclus._id
+                      curclus._id,
+                      props.user._id
                     );
                   }}
                 >
@@ -144,7 +146,7 @@ const ClusteringScreen = (props) => {
 };
 
 const mapStateToProps = (state) => {
-  return { admin: state.admin };
+  return { admin: state.admin, user: state.user };
 };
 
 const mapDispatchToProps = (dispatch) =>
@@ -159,6 +161,7 @@ const mapDispatchToProps = (dispatch) =>
       getPictureNotLabel: AdminActions.getPictureNotLabel,
       setAllButPics: AdminActions.setAllButPics,
       addToCluster: AdminActions.addToCluster,
+      clearPics: AdminActions.clearPics,
     },
     dispatch
   );

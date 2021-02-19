@@ -39,7 +39,7 @@ class MainApi extends HttpClient {
   };
 
   getLabel = (item) => {
-    return this.instance.get(`${routes.LABEL}/get`, item);
+    return this.instance.post(`${routes.LABEL}/get`, item);
   };
 
   addNewPicture = (item) => {
@@ -84,6 +84,22 @@ class MainApi extends HttpClient {
 
   getUser = (item) => {
     return this.instance.post(`${routes.USER}/login`, item);
+  };
+
+  addNewAnnotation = (item) => {
+    return this.instance.post(`${routes.ANNOTATION}/add`, item);
+  };
+
+  updateAnnotation = (item) => {
+    return this.instance.post(`${routes.ANNOTATION}/update`, item);
+  };
+
+  deleteAnnotation = (item) => {
+    return this.instance.post(`${routes.ANNOTATION}/delete`, item);
+  };
+
+  getAnnotation = (item) => {
+    return this.instance.post(`${routes.ANNOTATION}/get`, item);
   };
 }
 
