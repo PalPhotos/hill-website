@@ -28,23 +28,50 @@ const HomeScreen = (props) => {
   useEffect(() => {
     // rando();
     // props.getLabel();
-    const urlParams = new URLSearchParams(props.location.search);
+    // const urlParams = new URLSearchParams(props.location.search);
     // let user = urlParams.get("user");
-    let user = "602b91f37cdcb51cacd37769";
-    if (user && props.user.token.length === 0) {
-      props.getUser(user);
-      props.getAllPicture(user);
-    } else if (props.user.token.length > 0) {
-      props.getAllPicture(props.user._id);
+    // let user = "602b91f37cdcb51cacd37769";
+    if (props.user.name.length === 0) {
+      // props.getUser(user);
+      // props.getAllPicture(user);
+      history.push("/login");
+    } else if (props.user.name.length > 0) {
+      props.getAllPicture(props.user._id, pageNumber);
+    } else {
+      history.push("/login");
     }
   }, []);
 
   useEffect(() => {
     if (link.length > 0 && nexpage.length > 0 && !props.admin.loading) {
-      console.log("look cl");
       getdata(link);
     }
   }, [props.admin.loading]);
+
+  useEffect(() => {
+    window.addEventListener("scroll", listenToScroll);
+    // Specify how to clean up after this effect:
+    return function cleanup() {
+      window.removeEventListener("scroll", listenToScroll);
+    };
+  });
+
+  const listenToScroll = () => {
+    const winScroll =
+      document.body.scrollTop || document.documentElement.scrollTop;
+
+    const height =
+      document.documentElement.scrollHeight -
+      document.documentElement.clientHeight;
+
+    const scrolled = winScroll / height;
+
+    if (scrolled > 0.75 && !props.admin.loading && !props.admin.isPicEnd) {
+      let newPage = pageNumber + 1;
+      setPageNumber(newPage);
+      props.getAllPictureNext(props.user._id, newPage);
+    }
+  };
 
   const getdata = async (folderId) => {
     setloadingModal(true);
@@ -243,10 +270,9 @@ const HomeScreen = (props) => {
   };
 
   const picInfo = Object.keys(props.admin.allPictures);
-  console.log("pic", picInfo);
 
   return (
-    <div style={{}}>
+    <div style={{ width: "100%" }}>
       <Modal
         visible={loadingModal}
         closable={false}
@@ -319,11 +345,13 @@ const HomeScreen = (props) => {
         )}
       </div> */}
       <div>
-        {props.user.token.length > 0 &&
+        {props.user.name.length > 0 &&
           picInfo.map((item, index) => {
             return (
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <p style={{ margin: ".5%" }}>{item}</p>
+                <p style={{ margin: ".5%" }} className="date-text">
+                  {item}
+                </p>
                 <div
                   style={{
                     display: "flex",
@@ -339,6 +367,7 @@ const HomeScreen = (props) => {
                             margin: ".5%",
                             display: "flex",
                             flexDirection: "row",
+                            position: "relative",
                           }}
                         >
                           <img
@@ -348,13 +377,78 @@ const HomeScreen = (props) => {
                             onClick={() => {
                               history.push({
                                 pathname: "/single",
-                                state: { url: subItem.url },
+                                state: { url: subItem._id },
                               });
                             }}
                           />
-                          {subItem.labels.map((labelItem, index) => {
-                            return <Button>{labelItem.name}</Button>;
-                          })}
+                          <div
+                            style={{
+                              position: "absolute",
+                              height: "100%",
+                              width: "100%",
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "flex-end",
+                            }}
+                            onClick={() => {
+                              history.push({
+                                pathname: "/single",
+                                state: { url: subItem._id },
+                              });
+                            }}
+                          >
+                            <div
+                              style={{
+                                backgroundColor: "rgba(0,0,0,0.32)",
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                              }}
+                            >
+                              {subItem.labels.map((labelItem, index) => {
+                                if (index < 2) {
+                                  return (
+                                    <p
+                                      style={{
+                                        color: "white",
+                                        textAlign: "center",
+                                        padding: "3px",
+                                        paddingTop: "5px",
+                                        paddingBottom: "5px",
+                                        margin: "0px",
+                                      }}
+                                    >
+                                      {labelItem.name} |
+                                    </p>
+                                  );
+                                }
+                              })}
+                              {subItem.labels.length > 0 && (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    justifyContent: "flex-end",
+                                  }}
+                                >
+                                  <p
+                                    style={{
+                                      color: "white",
+                                      textAlign: "center",
+                                      padding: "3px",
+                                      margin: "0px",
+                                      backgroundColor: "#202020",
+                                      width: "30px",
+                                      height: "30px",
+                                      borderRadius: "50px",
+                                    }}
+                                  >
+                                    {subItem.labels.length}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       );
                     })}
@@ -377,6 +471,7 @@ const mapDispatchToProps = (dispatch) =>
       addNewLabel: AdminActions.addNewLabel,
       getLabel: AdminActions.getLabel,
       getAllPicture: AdminActions.getAllPicture,
+      getAllPictureNext: AdminActions.getAllPictureNext,
       addNewPicture: AdminActions.addNewPicture,
       getUser: UserActions.getUser,
       setUser: UserActions.setUser,

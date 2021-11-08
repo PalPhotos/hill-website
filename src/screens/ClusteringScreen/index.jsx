@@ -13,129 +13,212 @@ import "./styles.css";
 import { setAllButPics } from "../../redux/actions/admin.action";
 
 const ClusteringScreen = (props) => {
-  const [curclus, setCurClus] = useState({});
+  const [curclus, setCurClus] = useState("");
   const [visible, setVisible] = useState(false);
   const history = useHistory();
 
   useEffect(() => {
-    props.getLabel(props.user._id);
+    props.getLabelPicture(props.user._id);
     props.clearPics();
   }, []);
 
   if (props.admin.loading) {
-    return <Loading />;
-  } else {
     return (
-      <div style={{}}>
-        <Modal
-          visible={visible}
-          width={1000}
-          onCancel={() => {
-            setVisible(false);
-          }}
-          onOk={() => {
-            let tempArray = props.admin.allButPics.filter((el) => {
-              return el.selected === true;
-            });
-            props.addToCluster(tempArray, [curclus._id], props.user._id);
-
-            setVisible(false);
-          }}
-        >
-          <div
-            style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}
-          >
-            {props.admin.allButPics.map((item, index) => {
-              return (
-                <div
-                  style={{
-                    margin: ".5%",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  <img
-                    height={150}
-                    width={200}
-                    src={item.name}
-                    onClick={() => {
-                      let tempObj = item;
-                      if (tempObj.selected) {
-                        tempObj.selected = false;
-                      } else {
-                        tempObj.selected = true;
-                      }
-                      let tempArray = props.admin.allButPics;
-                      tempArray[index] = tempObj;
-                      props.setAllButPics(tempArray);
-                    }}
-                  />
-                  {item.selected && <Button>Selected</Button>}
-                </div>
-              );
-            })}
-          </div>
-        </Modal>
-        <div>
-          Choose which cluster you would like to see!
-          {props.admin.labels.map((item, index) => {
-            return (
-              <Button
-                type={curclus.name === item.name ? "primary" : null}
-                onClick={() => {
-                  setCurClus(item);
-                  props.getLabelPicture([item._id], props.user._id);
-                }}
-              >
-                {item.name}
-              </Button>
-            );
-          })}
-          <Button
-            onClick={() => {
-              if (curclus.name) {
-                setVisible(true);
-                props.getPictureNotLabel([curclus._id], props.user._id);
-              }
-            }}
-          >
-            Add to the selected cluster
-          </Button>
-        </div>
+      <div style={{ width: "100%" }}>
+        <Loading />
+      </div>
+    );
+  } else if (curclus.length > 0) {
+    let pic = props.admin.pictures[curclus];
+    return (
+      <div style={{ width: "100%" }}>
         <div
-          style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+          }}
         >
-          {props.admin.pictures.map((item, index) => {
-            const randomnumber = Math.floor(Math.random() * 10) % 3;
+          {pic.map((subItem, index) => {
             return (
               <div
                 style={{
                   margin: ".5%",
                   display: "flex",
-                  flexDirection: "column",
+                  flexDirection: "row",
+                  position: "relative",
                 }}
               >
                 <img
                   height={150}
                   width={200}
-                  src={item.name}
-                  // onClick={() => {
-                  //   history.push({ pathname: "/single", state: { url: item } });
-                  // }}
-                />
-                <Button
-                  type="primary"
+                  src={subItem.url}
                   onClick={() => {
-                    props.editLabelPicture(
-                      [curclus._id],
-                      item.name,
-                      curclus._id,
-                      props.user._id
-                    );
+                    history.push({
+                      pathname: "/single",
+                      state: { url: subItem._id },
+                    });
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    height: "100%",
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-end",
+                  }}
+                  onClick={() => {
+                    history.push({
+                      pathname: "/single",
+                      state: { url: subItem._id },
+                    });
                   }}
                 >
-                  Remove
-                </Button>
+                  <div
+                    style={{
+                      backgroundColor: "rgba(0,0,0,0.32)",
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                    }}
+                  >
+                    {subItem.labels.map((labelItem, index) => {
+                      if (index < 2) {
+                        return (
+                          <p
+                            style={{
+                              color: "white",
+                              textAlign: "center",
+                              padding: "3px",
+                              paddingTop: "5px",
+                              paddingBottom: "5px",
+                              margin: "0px",
+                            }}
+                          >
+                            {labelItem.name} |
+                          </p>
+                        );
+                      }
+                    })}
+                    {subItem.labels.length > 0 && (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "row",
+                          justifyContent: "flex-end",
+                        }}
+                      >
+                        <p
+                          style={{
+                            color: "white",
+                            textAlign: "center",
+                            padding: "3px",
+                            margin: "0px",
+                            backgroundColor: "#202020",
+                            width: "30px",
+                            height: "30px",
+                            borderRadius: "50px",
+                          }}
+                        >
+                          {subItem.labels.length}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  } else {
+    return (
+      <div style={{ width: "100%" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+          }}
+        >
+          {props.admin.labels.map((item, index) => {
+            let pic = props.admin.pictures[item.name];
+            return (
+              <div
+                style={{
+                  margin: ".5%",
+                  display: "flex",
+                  flexDirection: "row",
+                  position: "relative",
+                }}
+              >
+                <img
+                  height={150}
+                  width={200}
+                  src={pic[0].url}
+                  onClick={() => {}}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    height: "100%",
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-end",
+                  }}
+                  onClick={() => {
+                    setCurClus(item.name);
+                  }}
+                >
+                  <div
+                    style={{
+                      backgroundColor: "rgba(0,0,0,0.20)",
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <p
+                      style={{
+                        color: "white",
+                        textAlign: "center",
+                        padding: "3px",
+                        paddingTop: "5px",
+                        paddingBottom: "2px",
+                        margin: "0px",
+                      }}
+                    >
+                      {item.name}
+                    </p>
+                  </div>
+                  <div
+                    style={{
+                      backgroundColor: "rgba(0,0,0,0.20)",
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <p
+                      style={{
+                        color: "white",
+                        textAlign: "center",
+                        padding: "3px",
+                        paddingTop: "2px",
+                        paddingBottom: "5px",
+                        margin: "0px",
+                      }}
+                    >
+                      {pic.length} {pic.length === 1 ? "photo" : "photos"}
+                    </p>
+                  </div>
+                </div>
               </div>
             );
           })}

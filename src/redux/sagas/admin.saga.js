@@ -76,7 +76,7 @@ export function* addToCluster(action) {
       user,
     });
 
-    const res = yield call(adminService.getLabelPicture, { labels, user });
+    const res = yield call(adminService.getLabelPicture, { user });
 
     yield put({
       type: AdminTypes.GET_PICTURE_LABEL_SUCCESS,
@@ -93,6 +93,8 @@ export function* getOnePicture(action) {
   const { url } = action.payload;
   try {
     const res = yield call(adminService.getOnePicture, { url });
+
+    console.log("look", res);
 
     yield put({
       type: AdminTypes.GET_PICTURE_SUCCESS,
@@ -111,13 +113,14 @@ export function* getOnePicture(action) {
 
 export function* getLabelPicture(action) {
   const adminService = Container.get(AdminService);
-  const { labels, user } = action.payload;
+  const { user } = action.payload;
   try {
-    const res = yield call(adminService.getLabelPicture, { labels, user });
+    const res = yield call(adminService.getLabelPicture, { user });
 
     yield put({
       type: AdminTypes.GET_PICTURE_LABEL_SUCCESS,
       picture: res.data.userInfo,
+      labels: res.data.labels,
     });
   } catch (error) {
     console.log("Add items error ", error.response);
@@ -143,13 +146,14 @@ export function* getPictureNotLabel(action) {
 
 export function* getAllPicture(action) {
   const adminService = Container.get(AdminService);
-  const { user } = action.payload;
+  const { user, pageNumber } = action.payload;
   try {
-    const res = yield call(adminService.getAllPicture, { user });
+    const res = yield call(adminService.getAllPicture, { user, pageNumber });
 
     yield put({
       type: AdminTypes.GET_ALL_PICTURE_SUCCESS,
       picture: res.data.userInfo,
+      isEnd: res.data.isEnd,
     });
   } catch (error) {
     console.log("Add items error ", error.response);
@@ -166,7 +170,7 @@ export function* editLabelPicture(action) {
       label,
       user,
     });
-    const res = yield call(adminService.getLabelPicture, { labels, user });
+    const res = yield call(adminService.getLabelPicture, { user });
 
     yield put({
       type: AdminTypes.GET_PICTURE_LABEL_SUCCESS,
@@ -210,6 +214,55 @@ export function* addFromDrive(action) {
   }
 }
 
+export function* addPictureForLabelling(action) {
+  const adminService = Container.get(AdminService);
+  const { items, user } = action.payload;
+  try {
+    const resDrive = yield call(adminService.addPictureForLabelling, {
+      user,
+      items,
+    });
+  } catch (error) {
+    console.log("Add items error ", error.response);
+    yield put({ type: AdminTypes.GET_ALL_PICTURE_ERROR, error });
+  }
+}
+
+export function* getPictureForLabelling(action) {
+  const adminService = Container.get(AdminService);
+  const {} = action.payload;
+  try {
+    const resDrive = yield call(adminService.getPictureForLabelling, {});
+    console.log(resDrive.data);
+    yield put({
+      type: AdminTypes.GET_PICTURE_FOR_LABELLING_SUCCESS,
+      data: resDrive.data.userInfo,
+    });
+  } catch (error) {
+    console.log("Add items error ", error.response);
+    yield put({ type: AdminTypes.GET_ALL_PICTURE_ERROR, error });
+  }
+}
+
+export function* setPictureAfterLabelling(action) {
+  const adminService = Container.get(AdminService);
+  const { _id, labels } = action.payload;
+
+  try {
+    const resDrive = yield call(adminService.setPictureAfterLabelling, {
+      _id,
+      labels,
+    });
+    yield put({
+      type: AdminTypes.GET_PICTURE_FOR_LABELLING_REQUEST,
+      payload: {},
+    });
+  } catch (error) {
+    console.log("Add items error ", error.response);
+    yield put({ type: AdminTypes.GET_ALL_PICTURE_ERROR, error });
+  }
+}
+
 export default function* adminSaga() {
   yield all([
     takeLatest(AdminTypes.GET_LABEL_REQUEST, getLabel),
@@ -219,9 +272,22 @@ export default function* adminSaga() {
     takeLatest(AdminTypes.GET_PICTURE_LABEL_REQUEST, getLabelPicture),
     takeLatest(AdminTypes.EDIT_PICTURE_LABEL_REQUEST, editLabelPicture),
     takeLatest(AdminTypes.GET_ALL_PICTURE_REQUEST, getAllPicture),
+    takeLatest(AdminTypes.GET_ALL_PICTURE_REQUEST_NEXT, getAllPicture),
     takeLatest(AdminTypes.ADD_PICTURE_REQUEST, addNewPicture),
     takeLatest(AdminTypes.GET_PICTURE_NOT_LABEL_REQUEST, getPictureNotLabel),
     takeLatest(AdminTypes.ADD_TO_CLUSTER_REQUEST, addToCluster),
     takeLatest(AdminTypes.ADD_PICTURE_DRIVE_REQUEST, addFromDrive),
+    takeLatest(
+      AdminTypes.ADD_PICTURE_FOR_LABELLING_REQUEST,
+      addPictureForLabelling
+    ),
+    takeLatest(
+      AdminTypes.GET_PICTURE_FOR_LABELLING_REQUEST,
+      getPictureForLabelling
+    ),
+    takeLatest(
+      AdminTypes.UPDATE_PICTURE_AFTER_LABELLING,
+      setPictureAfterLabelling
+    ),
   ]);
 }

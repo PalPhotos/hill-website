@@ -22,3 +22,40 @@
   color: "white";
   border-radius: 10px;
 }
+
+.pal {
+  height: 24px;
+  width: 41px;
+  opacity: 0.65;
+  color: rgba(0, 0, 0, 0.87);
+  font-family: Montserrat;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0.15px;
+  line-height: 24px;
+}
+
+.photos {
+  height: 24px;
+  width: 72px;
+  opacity: 0.5;
+  color: rgba(0, 0, 0, 0.6);
+  font-family: Montserrat;
+  font-size: 20px;
+  letter-spacing: 0.15px;
+  line-height: 24px;
+  margin-left: 5%;
+}
+
+.ant-menu-item-selected {
+  background-color: #9bc056 !important;
+  color: white !important;
+}
+
+.ant-menu-item::after {
+  border-right: 0px !important;
+}
+
+.ant-menu-item-active{
+  color: black !important;
+}

@@ -151,6 +151,36 @@ class AdminService {
       throw error;
     }
   }
+
+  async addPictureForLabelling(type) {
+    try {
+      const publicApiService = Container.get(MainApi);
+      const response = await publicApiService.addPictureForLabelling(type);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getPictureForLabelling(type) {
+    try {
+      const publicApiService = Container.get(MainApi);
+      const response = await publicApiService.getPictureForLabelling(type);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async setPictureAfterLabelling(type) {
+    try {
+      const publicApiService = Container.get(MainApi);
+      const response = await publicApiService.setPictureAfterLabelling(type);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default AdminService;

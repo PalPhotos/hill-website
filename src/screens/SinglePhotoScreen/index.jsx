@@ -16,6 +16,9 @@ const SinglePhotoScreen = (props) => {
   const history = useHistory();
   const [currentStart, setCurrentStart] = useState([null, null]);
   const [isAnnotation, setIsAnnotation] = useState(true);
+  const [isMask, setIsMask] = useState(false);
+  const [isLabel, setIsLabel] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
   const [url, setUrl] = useState(props.location.state.url);
   const [options, setOptions] = useState([
     { name: "happy" },
@@ -24,6 +27,8 @@ const SinglePhotoScreen = (props) => {
   ]);
   const [suggestions, setsuggestions] = useState([]);
   const [value, setValue] = useState("");
+  const [width, setWidth] = useState("");
+  const [height, setHeight] = useState("");
   const [annotations, setAnnotations] = useState([]);
 
   useEffect(() => {
@@ -32,16 +37,28 @@ const SinglePhotoScreen = (props) => {
   }, []);
 
   useEffect(() => {
+    if (width.length === 0 || height.length === 0) {
+      if (props.admin.picture.width && props.admin.picture.height) {
+        setWidth(props.admin.picture.width * 2);
+        setHeight(props.admin.picture.height * 2);
+      } else {
+        setWidth(760);
+        setHeight(570);
+      }
+    }
+  }, [props.admin.picture]);
+
+  useEffect(() => {
     setAnnotations(props.annotation.annotations);
   }, [props.annotation.annotations.length]);
 
-  useEffect(() => {
-    if (!isAnnotation) {
-      drawImageFunc();
-      let ranArray = genArray();
-      drawColours(ranArray);
-    }
-  }, [isAnnotation]);
+  // useEffect(() => {
+  //   if (!isAnnotation) {
+  //     drawImageFunc();
+  //     let ranArray = genArray();
+  //     drawColours(ranArray);
+  //   }
+  // }, [isAnnotation]);
 
   const onChangein = (event, { newValue }) => {
     setValue(newValue);
@@ -55,7 +72,7 @@ const SinglePhotoScreen = (props) => {
     img.onload = () => {
       ctx.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height);
     };
-    img.src = url;
+    img.src = props.admin.picture.url;
   };
 
   const calculateMousePosition = (positionX, positionY) => {};
@@ -90,16 +107,22 @@ const SinglePhotoScreen = (props) => {
 
   const genArray = () => {
     let finArray = [];
-    for (let i = 0; i < 600; i++) {
+    for (let i = 0; i < props.admin.picture.width; i++) {
       let tempArray = [];
       for (let j = 0; j < 800; j++) {
         if (i < 150 && j < 200) {
           tempArray.push([0]);
         } else if (i < 300 && j < 400) {
           tempArray.push([1]);
-        } else if (i < 450 && j < 600) {
+        } else if (
+          i < props.admin.picture.height &&
+          j < props.admin.picture.width
+        ) {
           tempArray.push([2]);
-        } else if (i < 450 && j < 600) {
+        } else if (
+          i < props.admin.picture.height &&
+          j < props.admin.picture.width
+        ) {
           tempArray.push([3]);
         } else {
           tempArray.push([4]);
@@ -219,81 +242,295 @@ const SinglePhotoScreen = (props) => {
     value,
     onChange: onChangein,
   };
+
   // if (props.admin.loading) {
   // } else {
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "row",
-        height: "100%",
         width: "100%",
+        backgroundColor: "#202020",
       }}
     >
+      <Modal
+        visible={isLabel}
+        closable={false}
+        centered
+        footer={[
+          <Button
+            style={{
+              borderColor: "#9BC056",
+            }}
+            onClick={() => {
+              setIsLabel(false);
+            }}
+          >
+            CANCEL
+          </Button>,
+          <Button
+            onClick={() => {
+              props.addNewLabelPic(
+                value,
+                props.admin.picture._id,
+                props.user._id
+              );
+              setValue("");
+              setIsLabel(false);
+            }}
+            style={{
+              backgroundColor: "#9BC056",
+              borderColor: "#9BC056",
+              color: "white",
+            }}
+          >
+            LABEL
+          </Button>,
+        ]}
+      >
+        <div>
+          <Autosuggest
+            suggestions={suggestions}
+            onSuggestionsFetchRequested={onSuggestionsFetchRequested}
+            onSuggestionsClearRequested={onSuggestionsClearRequested}
+            getSuggestionValue={getSuggestionValue}
+            renderSuggestion={renderSuggestion}
+            onSuggestionSelected={onSuggestionSelected}
+            inputProps={inputProps}
+          />
+        </div>
+      </Modal>
       <div
-        id="sexy"
         style={{
-          flex: 0.7,
-          height: "100%",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          paddingRight: "2%",
+          paddingTop: "2%",
         }}
       >
-        {isAnnotation ? (
-          <div
-            className="boom"
+        {!isEdit ? (
+          <Button
             style={{
-              position: "absolute",
-              top: "25%",
-              left: "12.5%",
+              borderRadius: "50px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              backgroundColor: "#9BC056",
+              height: "50px",
+              width: "50px",
+              padding: "8px",
+              borderColor: "#9BC056",
+              paddingLeft: "10px",
+            }}
+            onClick={() => {
+              setIsEdit(true);
             }}
           >
-            <ReactPictureAnnotation
-              image={url}
-              onSelect={onSelect}
-              onChange={onChange}
-              width={600}
-              height={450}
-              annotationData={annotations}
+            <img
+              src="https://img.icons8.com/ios-filled/50/ffffff/tag-window.png"
+              height="32px"
             />
-          </div>
+          </Button>
         ) : (
-          <div
-            className="boom"
-            style={{
-              position: "absolute",
-              top: "25%",
-              left: "12.5%",
-            }}
-          >
-            <canvas
-              id="canvas"
-              ref={canvasRef}
-              width={600}
-              height={450}
-              // style={{
-              //   backgroundColor: "rgb(63, 63, 63)",
-              //   border: "1px solid rgb(214, 214, 214)",
-              // }}
-              style={{ backgroundColor: "black", position: "absolute" }}
-            ></canvas>
-            <canvas
-              id="canvas"
-              ref={canvasOverlayRef}
-              width={600}
-              height={450}
-              // style={{
-              //   backgroundColor: "rgb(63, 63, 63)",
-              //   border: "1px solid rgb(214, 214, 214)",
-              // }}
-
-              onMouseDown={onMouseDown}
-              onMouseMove={onMouseMove}
-              onMouseUp={onMouseUp}
-              style={{ position: "absolute", opacity: 0.6 }}
-            ></canvas>
-          </div>
+          <div style={{ height: "50px" }}></div>
         )}
       </div>
       <div
+        style={{
+          height: "100%",
+          width: "100%",
+          // padding: "10% 23%",
+          display: "flex",
+          flexDirection: "row",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", flex: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: !isAnnotation ? "center" : null,
+            }}
+          >
+            {!isAnnotation && (
+              <img
+                height={height}
+                width={width}
+                src={props.admin.picture.url}
+              />
+            )}
+            {isAnnotation && (
+              <div
+                className="boom"
+                style={{ marginLeft: "12%", height: height }}
+              >
+                <ReactPictureAnnotation
+                  image={props.admin.picture.url}
+                  onSelect={onSelect}
+                  onChange={onChange}
+                  width={width}
+                  height={height}
+                  annotationData={annotations}
+                />
+              </div>
+            )}
+          </div>
+
+          {isAnnotation && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "flex-end",
+              }}
+            >
+              <Button
+                style={{
+                  borderRadius: "50px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  backgroundColor: "#9BC056",
+                  height: "50px",
+                  width: "50px",
+                  padding: "10px",
+                  borderColor: "#9BC056",
+                  paddingLeft: "10px",
+                }}
+                onClick={() => {
+                  annotations.map((item) => {
+                    props.addNewAnnotation(props.admin.picture._id, item);
+                  });
+                }}
+              >
+                <img
+                  src="https://img.icons8.com/material/48/ffffff/checkmark--v1.png"
+                  height="26px"
+                />
+              </Button>
+            </div>
+          )}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "flex-end",
+              paddingTop: "5%",
+            }}
+          >
+            {props.admin.picture.labels &&
+              props.admin.picture.labels.map((item, index) => {
+                return (
+                  <Button
+                    style={{
+                      backgroundColor: "black",
+                      color: "white",
+                      borderColor: "black",
+                      borderRadius: "16px",
+                      marginRight: "1%",
+                    }}
+                  >
+                    {item.name}
+                  </Button>
+                );
+              })}
+          </div>
+        </div>
+        {isEdit ? (
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              paddingRight: "2%",
+            }}
+          >
+            <Button
+              style={{
+                borderRadius: "50px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                backgroundColor: "#9BC056",
+                height: "50px",
+                width: "50px",
+                padding: "10px",
+                borderColor: "#9BC056",
+                paddingLeft: "10px",
+              }}
+              onClick={() => {
+                setIsAnnotation(true);
+              }}
+            >
+              <img
+                src="https://img.icons8.com/ios-filled/50/ffffff/picture-in-picture-alternative.png"
+                height="26px"
+              />
+            </Button>
+            <Button
+              style={{
+                borderRadius: "50px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                backgroundColor: "#9BC056",
+                height: "50px",
+                width: "50px",
+                padding: "8px",
+                borderColor: "#9BC056",
+                paddingLeft: "10px",
+                marginTop: "20%",
+              }}
+              onClick={() => {
+                setIsMask(true);
+              }}
+            >
+              <img
+                src="https://img.icons8.com/material-sharp/48/ffffff/lasso-tool.png"
+                height="32px"
+              />
+            </Button>
+            <Button
+              style={{
+                borderRadius: "50px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                backgroundColor: "#9BC056",
+                height: "50px",
+                width: "50px",
+                padding: "10px",
+                borderColor: "#9BC056",
+                paddingLeft: "10px",
+                marginTop: "20%",
+              }}
+              onClick={() => {
+                setIsLabel(true);
+              }}
+            >
+              <img
+                src="https://img.icons8.com/material/48/ffffff/bookmark-ribbon--v1.png"
+                height="26px"
+              />
+            </Button>
+          </div>
+        ) : (
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              paddingRight: "2%",
+            }}
+          >
+            <div style={{ width: "50px" }} />
+          </div>
+        )}
+      </div>
+
+      {/* <div
         style={{
           flex: 0.3,
           backgroundColor: "#e1f5fe",
@@ -329,7 +566,11 @@ const SinglePhotoScreen = (props) => {
         />
         <Button
           onClick={() => {
-            props.addNewLabelPic(value, url, props.user._id);
+            props.addNewLabelPic(
+              value,
+              props.admin.picture.url,
+              props.user._id
+            );
             setValue("");
           }}
         >
@@ -366,7 +607,7 @@ const SinglePhotoScreen = (props) => {
         >
           convert
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 };

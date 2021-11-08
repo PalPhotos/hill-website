@@ -82,8 +82,24 @@ class MainApi extends HttpClient {
     return this.instance.post(`${routes.PICTURE}/adddrive`, item);
   };
 
+  addPictureForLabelling = (item) => {
+    return this.instance.post(`${routes.PICTURE}/addpiclabelling`, item);
+  };
+
+  getPictureForLabelling = (item) => {
+    return this.instance.post(`${routes.PICTURE}/getpiclabelling`, item);
+  };
+
+  setPictureAfterLabelling = (item) => {
+    return this.instance.post(`${routes.PICTURE}/setpiclabelling`, item);
+  };
+
   getUser = (item) => {
     return this.instance.post(`${routes.USER}/login`, item);
+  };
+
+  loginUser = (item) => {
+    return this.instance.post(`${routes.USER}/loginid`, item);
   };
 
   addNewAnnotation = (item) => {

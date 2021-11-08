@@ -24,6 +24,19 @@ const UserReducer = (state = initialState, action) => {
       };
     case UserTypes.GET_USER_ERROR:
       return { ...state, loading: false, err: null };
+    case UserTypes.LOGIN_USER_REQUEST:
+      return { ...state, loading: true, err: null };
+    case UserTypes.LOGIN_USER_SUCCESS:
+      return {
+        ...state,
+        name: action.data.name,
+        token: action.data.token,
+        _id: action.data._id,
+        expiry: action.data.expiry,
+        loading: false,
+      };
+    case UserTypes.LOGIN_USER_ERROR:
+      return { ...state, loading: false, err: action.message };
     case UserTypes.SET_USER_INFO:
       return {
         ...state,
@@ -32,6 +45,15 @@ const UserReducer = (state = initialState, action) => {
         _id: action.payload._id,
         expiry: action.payload.expiry,
         loading: false,
+      };
+    case UserTypes.RESET_USER_INFO:
+      return {
+        name: "",
+        token: "",
+        _id: "",
+        expiry: "",
+        loading: false,
+        err: null,
       };
     default:
       return state;

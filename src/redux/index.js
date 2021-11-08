@@ -6,7 +6,7 @@ import storage from "redux-persist/lib/storage";
 
 // Redux Persist
 const persistConfig = {
-  key: "hill",
+  key: "hill-final",
   storage: storage,
   whitelist: ["user"], // which reducer want to store
 };
